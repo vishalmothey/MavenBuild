@@ -1,27 +1,31 @@
-node(){
+node('master') {
+	stage ('checkout code') {
+		checkout scm
+	}
+	stage ('Build') {
+		sh "mvn clean install -Dmaven.test.skip=true"
+	}
+	stage ('Test Cases Execution') {
+		sh "mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent install -Pcoverage-per-test"
+	}
+	
+	stage ('Sonar Analysis'){
+	//sh 'mvn sonar:sonar -Dsonar.host.url=http://35.153.67.119:9000 -Dsonar.login=77467cfd2************'
+	}
 
-	def sonarHome = tool name: 'SonarScanner', type: 'hudson.plugins.sonar.SonarRunnerInstallation'
-	
-	stage('Code Checkout'){
-		checkout changelog: false, poll: false, scm: scmGit(branches: [[name: '*/master']], extensions: [], userRemoteConfigs: [[credentialsId: 'GitHubCreds', url: 'https://github.com/anujdevopslearn/MavenBuild']])
+	stage ('Archive Artifacts'){
+		archiveArtifacts artifacts: 'target/*.war'
 	}
-	stage('Build Automation'){
-		sh """
-			ls -lart
-			mvn clean install
-			ls -lart target
 
-		"""
+	stage ('Deployment'){
+		//deploy adapters: [tomcat9(credentialsId: 'TomcatCreds', path: '', url: 'http://xx.xxx.xxx.xxx:xxxx')], contextPath: null, war: 'target/*.war'
 	}
-	
-	stage('Code Scan'){
-		withSonarQubeEnv(credentialsId: 'SonarQubeCreds') {
-			sh "${sonarHome}/bin/sonar-scanner"
-		}
-		
-	}
-	
-	stage('Code Deployment'){
-		deploy adapters: [tomcat9(credentialsId: 'TomcatCreds', path: '', url: 'http://54.197.62.94:8080/')], contextPath: 'Planview', onFailure: false, war: 'target/*.war'
+
+	stage ('Notification'){
+		emailext (
+			subject: "Job Completed",
+			body: "Jenkins Pipeline Job for Maven Build got completed !!!",
+			to: "build-alert@example.com"
+		)
 	}
 }
