@@ -1,4 +1,8 @@
 node('master'){
+	tools {
+		maven 'maven360'
+	}
+	
 	stage ('checkout code'){
 		checkout scm
 	}
