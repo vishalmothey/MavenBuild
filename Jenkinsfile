@@ -2,6 +2,7 @@ node('master'){
 	// tools {
 	// 	maven 'maven360'
 	// }
+
 	
 	stage ('checkout code'){
 		checkout scm
@@ -14,7 +15,10 @@ node('master'){
 	}
 	
 	stage ('Sonar Analysis'){
-	//sh 'mvn sonar:sonar -Dsonar.host.url=http://35.153.67.119:9000 -Dsonar.login=77467cfd2************'
+		def mvn = tool 'maven363';
+    		withSonarQubeEnv() {
+      		sh "${mvn}/bin/mvn clean verify sonar:sonar -Dsonar.projectKey=test_project -Dsonar.projectName='test_project'"
+    		}
 	}
 
 	stage ('Archive Artifacts'){
